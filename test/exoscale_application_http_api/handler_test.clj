@@ -1,6 +1,7 @@
 (ns exoscale-application-http-api.handler-test
   (:require [clojure.test :refer :all]
             [ring.mock.request :as mock]
+            [ring.middleware.json :refer [wrap-json-response]]
             [cheshire.core :as json]
             [exoscale-application-http-api.storage.handlers :as h]
             [exoscale-application-http-api.storage.in-memory :refer [in-memory-storage]]
@@ -11,7 +12,7 @@
   (testing "main route"
     (let [response (app (mock/request :get "/"))]
       (is (= (:status response) 200))
-      (is (= (:body response) "Hello World"))))
+      (is (= (:body response) "It Works! Try a GET /jobs :)"))))
 
   (testing "not-found route"
     (let [response (app (mock/request :get "/invalid"))]
@@ -39,14 +40,14 @@
     (doseq [[id job] id-jobs]
       (st/create-job stg id job))
 
-    (let [handler (h/list-jobs-handler stg)
+    (let [handler (wrap-json-response (fn [_] (h/list-jobs stg)))
           response (handler (mock/request :get "/jobs"))
-          parsed-jobs (json/decode (:body response))]
+          parsed-jobs (:body response)]
       (testing "the response is a 200"
         (is (= 200 (:status response))))
 
       (testing "with a body that decodes to the original map"
-        (is (= id-jobs parsed-jobs))))))
+        (is (= id-jobs (json/decode parsed-jobs)))))))
 
 (deftest delete-job-test
   (let [stg (in-memory-storage)
