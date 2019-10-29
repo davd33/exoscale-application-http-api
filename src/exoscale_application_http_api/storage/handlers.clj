@@ -14,7 +14,9 @@
 
 (defn delete-job
   [stg id]
-  (st/delete-job stg id)
+  (res/response (if-let [res (st/delete-job stg id)]
+                  res
+                  {:error (str "ID " id " doesn't exist.")}))
   (-> (res/response "")
       (res/status 204)))
 

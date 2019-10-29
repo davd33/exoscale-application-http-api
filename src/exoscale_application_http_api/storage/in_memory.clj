@@ -14,8 +14,9 @@
 
 (defn delete-job*
   [!stg id]
-  (swap! !stg dissoc id)
-  nil)
+  (if (contains? @!stg id)
+    (swap! !stg dissoc id)
+    nil))
 
 (def list-jobs* deref)
 
